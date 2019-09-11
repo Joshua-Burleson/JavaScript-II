@@ -53,33 +53,151 @@ const runners = [
   { id: 48, first_name: "Anderea", last_name: "MacGiolla Pheadair", email: "amacgiollapheadair1b@xing.com", shirt_size: "2XL", company_name: "Kwimbee", donation: 214 },
   { id: 49, first_name: "Bel", last_name: "Alway", email: "balway1c@ow.ly", shirt_size: "S", company_name: "Voolia", donation: 107 },
   { id: 50, first_name: "Shell", last_name: "Baine", email: "sbaine1d@intel.com", shirt_size: "M", company_name: "Gabtype", donation: 171 },
-];
+  { id: 51, first_name: 'Dank', last_name: 'Zebedee', email: 'dzebedee16@ezinearticles.com', shirt_size: 'XL', company_name: 'Gigashots', donation: 241 }
+]; //I added #51 to test problem #3
 
 // ==== Challenge 1: Use .forEach() ====
 // The event director needs both the first and last names of each runner for their running bibs. Combine both the first and last names and populate a new array called `fullNames`. This array will contain just strings.
+
 let fullNames = [];
+
+runners.forEach(runner => {
+  fullNames.push(`${runner.first_name} ${runner.last_name}`);
+});
+
 console.log(fullNames);
 
 // ==== Challenge 2: Use .map() ====
 // The event director needs to have all the runners' first names in uppercase because the director BECAME DRUNK WITH POWER. Populate an array called `firstNamesAllCaps`. This array will contain just strings.
-let firstNamesAllCaps = [];
+
+let firstNamesAllCaps = runners.map(runner => runner.first_name.toUpperCase());
+
 console.log(firstNamesAllCaps);
 
 // ==== Challenge 3: Use .filter() ====
 // The large shirts won't be available for the event due to an ordering issue. We need a filtered version of the runners array, containing only those runners with large sized shirts so they can choose a different size. This will be an array of objects.
-let runnersLargeSizeShirt = [];
+
+let runnersLargeSizeShirt = runners.filter(runner => runner.shirt_size === 'L');
+
 console.log(runnersLargeSizeShirt);
 
 // ==== Challenge 4: Use .reduce() ====
 // The donations need to be tallied up and reported for tax purposes. Add up all the donations and save the total into a ticketPriceTotal variable.
-let ticketPriceTotal = 0;
+let ticketPriceTotal = runners.reduce((total, runner) => {
+  return total + runner.donation;
+}, 0);
 console.log(ticketPriceTotal);
 
 // ==== Challenge 5: Be Creative ====
-// Now that you have used .forEach(), .map(), .filter(), and .reduce().  I want you to think of potential problems you could solve given the data set and the 5k fun run theme.  Try to create and then solve 3 unique problems using one or many of the array methods listed above.
+// Now that you have used .forEach(), .map(), .filter(), and .reduce().  
+//I want you to think of potential problems you could solve given the data set and the 5k fun run theme.  
+//Try to create and then solve 3 unique problems using one or many of the array methods listed above.
 
 // Problem 1
+// A "VIP" top-donors happy hour is scheduled after the 5k, in order to qualify for the event a runner must have raised at least $150.
+// Return an array of the VIP's first and last names and how much they raised.
+
+let VIPNames = runners.filter(runner => runner.donation >= 150).map(runner => `${runner.first_name} ${runner.last_name}: $${runner.donation}`);
+console.log(VIPNames);
 
 // Problem 2
+// The director wants to recognize companies that had more than one runner show up for the event.
+// Create an array of companies with more than 1 runner, with the company names only appearing once (no-repeats).
+
+let companies = runners.map(runner => runner.company_name);
+
+let topCompanies = companies.filter((company, index) => companies.indexOf(company) != companies.lastIndexOf(company) && index === companies.indexOf(company));
+console.log(topCompanies);
 
 // Problem 3
+// The director has decided he wants to hold on to the data set for recruitment for the future, but has decided that he wants it organized alphatically
+// by the runners' last names. *If a last name appears more than once, create an object with a name attribute set to the last name, and a runners attribute
+// with an array of the runners with that last name.
+
+//Create a class for repeated last names
+class runningFamily {
+  constructor(name, runner){
+    this._name = name;
+    this._runners = [runner];
+  }
+
+  set addRunner(runner){
+    this._runners.push(runner);
+    return this._runners;
+  }
+
+  get name(){
+    return this._name;
+  }
+
+}
+
+//Create a sorted array of all last names
+let lastNames = runners.map(runner => runner.last_name).sort();
+
+//Create an array of repeated last names
+let repeatLastNames = lastNames.filter((runnerName, index) => {
+  if(lastNames.indexOf(runnerName) !== lastNames.lastIndexOf(runnerName)){
+    return runnerName;
+  }
+});
+
+//Create an array to hold objects of repeated last names, which will take the form of an instance of the runningFamily class
+let repeatedLastNameObjs = [];
+
+//Iterate through repated last names array
+repeatLastNames.forEach(runnerName => {
+  
+  //Save index of runnerName index from lastNames, as it will be removed, altered and replaced.
+  let index = lastNames.indexOf(runnerName);
+
+  //Identify whether an object for the last name already exists in the repatedLastNameObjs array
+  if(repeatedLastNameObjs.find(runningFam => runningFam.family.name === runnerName) === undefined){
+
+    //If not, create one with the name set as the current last name and the first "runner" set as the current runner
+    let newFamily = new runningFamily(runnerName, runners[index]);
+    
+    //Create a placeholder for this index in lastNames to simplify replacing the index with the completed object later.
+    lastNames[index] = 'placeholder';
+
+    //Push the name's index and the new object into the repeatLastNames array. Preserving the index will allow us to replace
+    //it with ease later.
+    repeatedLastNameObjs.push({index: index, family: newFamily})
+  }else{
+    //If an object with this last name exists, update it.
+
+    //Leverage the find method on the repeatedLastNameObjs array to avoid unneccesarry iteration
+    repeatedLastNameObjs.find(runningFam => {
+      //Locate the correct object,
+      if(runningFam.family.name === runnerName){
+        //Utilize the addRunner setter to push the runner object into the runners array of the family object.
+        runningFam.family.addRunner = runners[index];
+        //Remove the current instance from the lastNames array to avoid duplication
+        lastNames.splice(index, 1);
+        //Return to terminate find function, I've chosen to return runningFam.family.name, however anything that
+        //doesn't throw an error would be acceptable.
+        return runningFam.family.name;
+      }
+    });
+  }
+});
+
+//Replace the last names in the lastNames array with the full runner object (or family object), while preserving order 
+lastNames = lastNames.map((name, index )=> {
+  //If the current name is a place holder, return the family object.
+  if(name === 'placeholder'){
+    return repeatedLastNameObjs.find(familyObj => {
+      //Utilize index for object identification
+      if(familyObj.index === index){
+        //return only family object
+        return familyObj.family;
+      }
+    });
+  }else{
+    //Otherwise, return full object for last name from runners.
+    return runners.find(runnerObj => runnerObj.last_name === name);
+  }
+})
+
+
+console.log(lastNames)
